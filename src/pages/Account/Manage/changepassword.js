@@ -1,7 +1,6 @@
-import { type } from '@testing-library/user-event/dist/type'
 import React, {useContext, useEffect, useState} from 'react'
-import { redirect, useNavigate } from 'react-router-dom'
-import Context from '../../../context'
+import { useNavigate } from 'react-router-dom'
+import Context from '../../../Context/context'
 import ManageNav from './manageNav'
 
 export default function ChangePassword(){
@@ -36,14 +35,16 @@ export default function ChangePassword(){
                     }                
                     setLocalErrorHolder(errors) 
                 }).catch(e => {
-                    console.log(e)
+                    setLocalErrorHolder(e.message) 
                 })
             }
-        }).catch(e => console.log(e))
+        }).catch(e => {
+            setLocalErrorHolder(e.message) 
+        })
     }
     useEffect(() => {
         if(isSignedIn === false){
-            navigate('/Account/Login')
+            return navigate('/Account/Login')
         }
     })
     return(
@@ -60,7 +61,8 @@ export default function ChangePassword(){
                     <div className={'row'}>
                         <div className={'col-md-6'}>
                             <form id={'change-password-form'} onSubmit={submit}>
-                                <div className={'form-floating'}>
+                            <hr/>
+                                <div className={'form-group'}>
                                     <label className={'form-label'}>Current password</label>
                                     <input className={'form-control'} value={credentialsHolder.oldpassword}
                                     onChange={e => {
@@ -71,20 +73,22 @@ export default function ChangePassword(){
                                         }))
                                     }}/>
                                 </div>
-                                <div className={'form-floating'}>
+                                <div className={'form-group'}>
                                     <label className={'form-label'}>New password</label>
                                     <input className={'form-control'} value={credentialsHolder.newpassword}
                                     onChange={e => {
+                                        setLocalErrorHolder('')
                                         return setCredentialsHolder((prevState) => ({
                                             ...prevState,
                                             newpassword: e.target.value
                                         }))
                                     }}/>
                                 </div>
-                                <div className={'form-floating'}>
+                                <div className={'form-group'}>
                                     <label className={'form-label'}>Confirm new password</label>
                                     <input className={'form-control'} value={credentialsHolder.confirmpassword}
                                     onChange={e => {
+                                        setLocalErrorHolder('')
                                         return setCredentialsHolder((prevState) => ({
                                             ...prevState,
                                             confirmpassword: e.target.value
