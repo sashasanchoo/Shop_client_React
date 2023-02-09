@@ -1,7 +1,7 @@
 import React, { useEffect, useContext, useState }  from 'react'
 import ManageNav from './manageNav'
 import { useNavigate } from 'react-router-dom'
-import Context from '../../../context'
+import Context from '../../../Context/context'
 
 export default function Index(){
     const {SignedIn, ContextUsername} = useContext(Context)
@@ -26,7 +26,7 @@ export default function Index(){
                     <h3>Profile</h3>
                     <div className={'row'}>
                         <div className={'col-md-6'}>
-                            <div className={'form-floating'}>
+                            <div className={'form-group'}>
                                 <label className={'form-label'}>{username}</label>
                             </div>
                         </div>
