@@ -1,12 +1,14 @@
 import React, {useEffect, useState, useContext} from 'react'
 import { useNavigate } from 'react-router-dom';
-import Context from '../../context';
+import Context from '../../Context/context';
 
 export default function Login(){
-    const {SignedIn} = useContext(Context)
+    const {SignedIn, RequestResultHolder} = useContext(Context)
     const [isSignedIn, setIsSignedIn] = SignedIn
-
-    const [localErrorHolder, setLocalErrorHolder] = useState('')
+    //Global error handling 
+    const [requestResultHolder, setRequestResultHolder] = RequestResultHolder
+    //Local error handling
+    const [localRequestResultHolder, setLocalRequestResultHolder] = useState('')
 
     const [credentialsHolder, setCredentialsHolder] = useState({
         emailaddress: "",
@@ -18,16 +20,14 @@ export default function Login(){
 
     const submitHandler = (e) => {
         e.preventDefault()
-        console.log("isRequestSubmited from submitHandler" + isRequrestSubmited)
         setIsRequestSubmited(true)
     }
     
     useEffect(() => {
-        console.log(isSignedIn)
         if(isSignedIn){
-            navigate('/')     
+            return navigate('/')     
         }
-        if(isRequrestSubmited === true){
+        if(isRequrestSubmited){
             fetch(
                 `https://localhost:7104/api/Users/BearerToken`,{
                 method: 'POST',
@@ -40,7 +40,6 @@ export default function Login(){
                     response.json().then(json => {
                         const JWTValue = `${json["token"]}`;
                         const JWTExpiration = `${json["expiration"]}`
-                        console.log(json['expiration'])
                         localStorage.setItem(process.env.REACT_APP_JWT_KEY, JWTValue);                       
                         localStorage.setItem(process.env.REACT_APP_JWT_EXPIRATON, JWTExpiration)       
                         setIsSignedIn(localStorage[process.env.REACT_APP_JWT_EXPIRATON] === undefined ? false : (Date.now() > Date.parse(localStorage[process.env.REACT_APP_JWT_EXPIRATON]) ? false : true))            
@@ -51,16 +50,15 @@ export default function Login(){
                     response.text().then(data => {
                         throw new Error(data);
                     }).catch(e => {
-                        setLocalErrorHolder(`${e}`)
+                        setLocalRequestResultHolder(`${e}`)
                     });
                 }
             }).catch((e) => {
-                navigate('/error-page')
-                console.log(e)
+                setRequestResultHolder(e.message)
+                navigate('/Error')
             })
             }
         return () => {
-            console.log("isRequestSubmited from useEffect cleaning resources" + isRequrestSubmited)
             setIsRequestSubmited(false)
         }
     }, [isRequrestSubmited])
@@ -69,25 +67,29 @@ export default function Login(){
             <div className={'col-md-4'}>
                 <section>
                     <form onSubmit={submitHandler}>
-                    <div className={'form-floating'}>
+                    <div className={'form-group'}>
                         <label className={'form-label'}>Email</label>
-                        <input className={'form-control'} value={credentialsHolder.emailaddress} onChange={e => {
+                        <input className={'form-control'} value={credentialsHolder.emailaddress}
+                        autoComplete="email" onChange={e => {
+                            setLocalRequestResultHolder('')
                             return setCredentialsHolder((prevState) => ({
                             ...prevState,
                             emailaddress: e.target.value
                             }))
                         }}/>
                     </div>
-                    <div className={'form-floating'}>
+                    <div className={'form-group'}>
                         <label className={'form-label'}>Password</label>
-                        <input className={'form-control'} value={credentialsHolder.password} type='password' onChange={e => {
+                        <input className={'form-control'} value={credentialsHolder.password} 
+                        autoComplete="password" type='password' onChange={e => {
+                            setLocalRequestResultHolder('')
                             return setCredentialsHolder((prevState) => ({
                             ...prevState,
                             password: e.target.value
                         }))}
                         }/>
                     </div>
-                    <span className={'text-danger'}>{localErrorHolder}</span>
+                    <span className={'text-danger'}>{localRequestResultHolder}</span>
                     <div>
                         <button type='submit' className={'w-100 btn btn-lg btn-primary'}>Login</button>
                     </div>

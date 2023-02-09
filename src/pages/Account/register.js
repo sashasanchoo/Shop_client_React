@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
-
+import React, { useEffect, useState, useContext } from 'react'
+import Context from '../../Context/context'
+import { useNavigate } from 'react-router-dom'
 
 export default function Register(){
 
@@ -9,8 +10,15 @@ export default function Register(){
         password: '',
         confirmpassword: ''
     })
-
+    const navigate = useNavigate()
+    const {SignedIn, RequestResultHolder} = useContext(Context)
+    const [isSignedIn, setIsSignedIn] = SignedIn
     const [isRequestSubmited, setIsRequestSubmited] = useState(false)
+
+    //Global error handling 
+    const [requestResultHolder, setRequestResultHolder] = RequestResultHolder
+    //Local error handling
+    const [localRequestResultHolder, setLocalRequestResultHolder] = useState('')
 
     const submitHandler = (e) => {
         e.preventDefault()
@@ -27,7 +35,10 @@ export default function Register(){
     }
 
     useEffect(() => {
-        if(isRequestSubmited === true){
+        if(isSignedIn){
+            return navigate('/')     
+        }
+        if(isRequestSubmited){
             fetch(
                 `https://localhost:7104/api/Users`,{
                 method: "POST",
@@ -44,16 +55,18 @@ export default function Register(){
                 }
                 if(response.status !== 200){
                     response.text().then(data => {
-                        console.log(data)
                         throw new Error(data);
-                        
-                    }).catch(e => console.log(e));
+                    }).catch(e => {
+                        setLocalRequestResultHolder(`${e}`)
+                    });
                 }
+            }).catch((e) => {
+                setRequestResultHolder(e.message)
+                navigate('/Error')
             })
         }
         return () => {
             setIsRequestSubmited(false)
-            console.log("isRequestSubmited from useEffect cleaning resources" + isRequestSubmited)
         }
     }, [isRequestSubmited])
 
@@ -62,51 +75,56 @@ export default function Register(){
             <div className={'col-md-4'}>
                 <section>
                     <form onSubmit={submitHandler}>
-                    <div className={'form-floating'}>
+                    <div className={'form-group'}>
                         <label className={'form-label'}>Username</label>
-                        <input className={'form-control'} value={credentialsHolder.username} onChange={e => {
+                        <input className={'form-control'} value={credentialsHolder.username} 
+                        autoComplete="username" onChange={e => {
                             return setCredentialsHolder((prevState) => ({
                             ...prevState,
                             username: e.target.value
                             }))
                         }}/>
                     </div>
-                    <div className={'form-floating'}>
+                    <div className={'form-group'}>
                         <label className={'form-label'}>Email</label>
-                        <input className={'form-control'} value={credentialsHolder.email} onChange={e => {
+                        <input className={'form-control'} value={credentialsHolder.email} 
+                        autoComplete="email" onChange={e => {
+                            setLocalRequestResultHolder('')
                             return setCredentialsHolder((prevState) => ({
                             ...prevState,
                             email: e.target.value
                             }))
                         }}/>
                     </div>
-                    <div className={'form-floating'}>
+                    <div className={'form-group'}>
                         <label className={'form-label'}>Password</label>
-                        <input className={'form-control'} value={credentialsHolder.password} type='password' onChange={e => {
+                        <input className={'form-control'} value={credentialsHolder.password} type='password' 
+                        autoComplete="password" onChange={e => {
+                            setLocalRequestResultHolder('')
                             return setCredentialsHolder((prevState) => ({
                             ...prevState,
                             password: e.target.value
                         }))}
                         }/>
                     </div>
-                    <div className={'form-floating'}>
+                    <div className={'form-group'}>
                         <label className={'form-label'}>Confirm password</label>
-                        <input className={'form-control'} value={credentialsHolder.confirmpassword} type='password' onChange={e => {
+                        <input className={'form-control'} value={credentialsHolder.confirmpassword} type='password' 
+                        autocomplete="confirm-password" onChange={e => {
+                            setLocalRequestResultHolder('')
                             return setCredentialsHolder((prevState) => ({
                             ...prevState,
                             confirmpassword: e.target.value
                         }))}
                         }/>
                     </div>
+                    <span className={'text-danger'}>{localRequestResultHolder}</span>
                     <div>
                         <button type='submit' className={'w-100 btn btn-lg btn-primary'}>Register</button>
                     </div>
-                    </form>
-                    
-                </section>
-                
+                    </form>          
+                </section>           
             </div>
-
         </div>
     )
 }

@@ -1,13 +1,12 @@
-import React, { useEffect, useState, useContext } from 'react'
+import React, { useEffect, useContext } from 'react'
 import { NavLink } from 'react-router-dom'
-import Context from '../context'
+import Context from '../Context/context'
 
 export default function LoginPartial(){
-    const {SignedIn, ContextUsername} = useContext(Context)
+    const {SignedIn, ContextUsername, IsInAdminRole} = useContext(Context)
     const [isSignedIn, setIsSignedIn] = SignedIn
     const [username, setUsername] = ContextUsername
-    //isAdmin вынести на уровень App.js
-    const [isAdm, setIsAdmin] = useState('')
+    const [isInAdminRole, setIsInAdminRole] = IsInAdminRole
     useEffect(() => {
         if(isSignedIn){
             fetch(
@@ -20,8 +19,7 @@ export default function LoginPartial(){
             }).then(response => {
                 if(response.status === 200){
                     response.json().then(json => {
-                        setIsAdmin(json)
-                        console.log(json)
+                        setIsInAdminRole(json)
                     }
                 )
                 }
@@ -29,23 +27,25 @@ export default function LoginPartial(){
                     response.text().then(data => {
                         throw new Error(data);
                     }).catch(e => {
-                        console.log(e)
+                        //console.log(e)
                     })
                 }
+            }).catch(e => {
+                //console.log(e)
             })
         }
         
-    })
+    }, [isSignedIn])
     return(
         <>
-            {isSignedIn === true ? (
+        {isSignedIn === true ? (
                 <ul className={'navbar-nav'}>
                     <li className={'nav-item'}>
                         <NavLink to='/Account/Manage/index' className={'navbar-brand text-white'}>
                             Hello, {username}
                         </NavLink>
                     </li>
-                    {isAdm === true ? (<li className={'nav-item'}>
+                    {isInAdminRole === true ? (<li className={'nav-item'}>
                         <NavLink to='/Account/Manage/Admin/Index' className={'navbar-brand text-white'}>
                             Admin's panel 
                         </NavLink>
@@ -69,6 +69,7 @@ export default function LoginPartial(){
                     </NavLink>
                 </li> 
             </ul>)}
+            
         </>
     )
 }
