@@ -2,13 +2,14 @@ import React, { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Context from '../../Context/context'
 import CommonProduct from './commonProduct'
-import Header from '../header'
-import PageManager from '../Helpers/pageManager'
+import PageManager from '../helpers/pageManager'
 import CategoriesWidget from '../Widgets/categoriesWidget'
 import SearchWidget from '../Widgets/searchWidget'
+import Loader from '../helpers/loader'
 
 export default function ProductList(){ 
 
+    const [loading, setLoading] = useState(true)
     //Items for products managing
     const [Products, setProducts] = useState([])
     const [Categories, setCategories] = useState([])
@@ -38,6 +39,7 @@ export default function ProductList(){
           if(response.status === 200){
             response.json().then(json => {
               setProducts(json)
+              setLoading(false)
             })
             .catch(e => {
               setRequestResultHolder(e.message)
@@ -67,34 +69,36 @@ export default function ProductList(){
           setRequestResultHolder(e.message)
           navigate('/Error')
         })
-        
       }, [selectedCategory])
     return(
         <>
-        <Header/>
-        <div className={'container mt-5'}>
-            <div className={'row'}>
-                <div className={'col-lg-8'}>
+        {loading ? <Loader/> : (
+          <>
+                    <div className={'col-lg-8'}>
                     <div className={'row'}>
                         {limitedCurrentPageProducts.map((product, index) => {
                             return <CommonProduct product={product} key={product.id}/>
                         })}                       
-                        <PageManager
+                        
+                    </div>    
+                    <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <PageManager
                           itemsCount={allProductsCount}
                           itemsPerPage={productsPerPage}
                           currentPage={currentPage}
                           setCurrentPage={setCurrentPage}
                           alwaysShown={false}
                         />
-                    </div>    
+                    </div>
                     
                 </div>
                 <div className={'col-lg-4'}>
                     <SearchWidget/>
                     <CategoriesWidget categories={Categories}/>
                 </div>
-            </div>    
-      </div>  
+          </>
+        )}
+        
         </>       
     )
 }

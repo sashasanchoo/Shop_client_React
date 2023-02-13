@@ -33,6 +33,7 @@ export default function PublishComment(props){
         }).then(response => {
             if(response.status === 204){            
                 setIsAnyErrors(false)
+                setComplexComment((prevState) => ({...prevState, content: ''}))
             }
             else if(response.status !== 204){
 

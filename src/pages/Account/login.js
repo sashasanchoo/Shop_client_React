@@ -14,54 +14,47 @@ export default function Login(){
         emailaddress: "",
         password: ""
     })
-    const [isRequrestSubmited, setIsRequestSubmited] = useState(false);
 
     const navigate = useNavigate();
 
-    const submitHandler = (e) => {
+    const submitHandler = async (e) => {
         e.preventDefault()
-        setIsRequestSubmited(true)
-    }
-    
+
+        await fetch(
+            `https://localhost:7104/api/Users/BearerToken`,{
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(credentialsHolder)
+        }).then(response => {
+            if(response.status === 200){
+                response.json().then(json => {
+                    const JWTValue = `${json["token"]}`;
+                    const JWTExpiration = `${json["expiration"]}`
+                    localStorage.setItem(process.env.REACT_APP_JWT_KEY, JWTValue);                       
+                    localStorage.setItem(process.env.REACT_APP_JWT_EXPIRATON, JWTExpiration)       
+                    setIsSignedIn(localStorage[process.env.REACT_APP_JWT_EXPIRATON] === undefined ? false : (Date.now() > Date.parse(localStorage[process.env.REACT_APP_JWT_EXPIRATON]) ? false : true))            
+                    navigate('/Account/Manage/Index')
+                })                  
+            }
+            if(response.status !== 200){
+                response.text().then(data => {
+                    throw new Error(data);
+                }).catch(e => {
+                    setLocalRequestResultHolder(`${e}`)
+                });
+            }
+        }).catch((e) => {
+            setRequestResultHolder(e.message)
+            navigate('/Error')
+        })
+        }
     useEffect(() => {
         if(isSignedIn){
             return navigate('/')     
         }
-        if(isRequrestSubmited){
-            fetch(
-                `https://localhost:7104/api/Users/BearerToken`,{
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(credentialsHolder)
-            }).then(response => {
-                if(response.status === 200){
-                    response.json().then(json => {
-                        const JWTValue = `${json["token"]}`;
-                        const JWTExpiration = `${json["expiration"]}`
-                        localStorage.setItem(process.env.REACT_APP_JWT_KEY, JWTValue);                       
-                        localStorage.setItem(process.env.REACT_APP_JWT_EXPIRATON, JWTExpiration)       
-                        setIsSignedIn(localStorage[process.env.REACT_APP_JWT_EXPIRATON] === undefined ? false : (Date.now() > Date.parse(localStorage[process.env.REACT_APP_JWT_EXPIRATON]) ? false : true))            
-                        navigate('/Account/Manage/Index')
-                    })                  
-                }
-                if(response.status !== 200){
-                    response.text().then(data => {
-                        throw new Error(data);
-                    }).catch(e => {
-                        setLocalRequestResultHolder(`${e}`)
-                    });
-                }
-            }).catch((e) => {
-                setRequestResultHolder(e.message)
-                navigate('/Error')
-            })
-            }
-        return () => {
-            setIsRequestSubmited(false)
-        }
-    }, [isRequrestSubmited])
+    })
     return(
         <div className={'row'}>
             <div className={'col-md-4'}>
@@ -89,7 +82,7 @@ export default function Login(){
                         }))}
                         }/>
                     </div>
-                    <span className={'text-danger'}>{localRequestResultHolder}</span>
+                    <span className={'text-danger'}>{localRequestResultHolder}</span>              
                     <div>
                         <button type='submit' className={'w-100 btn btn-lg btn-primary'}>Login</button>
                     </div>

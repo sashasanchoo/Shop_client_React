@@ -14,8 +14,9 @@ export default function ErrorHandler(){
         })
     }, [requestResultHolder])
     return(
-        <>
-            <h1 className={'text-danger'}>{requestResultHolder}</h1>
-        </>
+        <div className={'col-lg-8'}>
+                    <h1 className={'text-danger'}>{requestResultHolder}</h1>
+
+    </div>
     )
 }

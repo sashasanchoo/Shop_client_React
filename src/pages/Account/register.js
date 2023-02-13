@@ -13,17 +13,39 @@ export default function Register(){
     const navigate = useNavigate()
     const {SignedIn, RequestResultHolder} = useContext(Context)
     const [isSignedIn, setIsSignedIn] = SignedIn
-    const [isRequestSubmited, setIsRequestSubmited] = useState(false)
 
     //Global error handling 
     const [requestResultHolder, setRequestResultHolder] = RequestResultHolder
     //Local error handling
     const [localRequestResultHolder, setLocalRequestResultHolder] = useState('')
 
-    const submitHandler = (e) => {
+    const submitHandler = async (e) => {
         e.preventDefault()
-        setIsRequestSubmited(true)
-        console.log("isRequestSubmited from submitHandler" + isRequestSubmited)
+        await fetch(
+            `https://localhost:7104/api/Users`,{
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(credentialsHolder)
+        }).then(response => {
+            if(response.status === 200 || response.status === 201){
+                clearInputs()
+                response.json().then(user => {
+                    console.log(user);                     
+                })
+            }
+            if(response.status !== 200){
+                response.text().then(data => {
+                    throw new Error(data);
+                }).catch(e => {
+                    setLocalRequestResultHolder(`${e}`)
+                });
+            }
+        }).catch((e) => {
+            setRequestResultHolder(e.message)
+            navigate('/Error')
+        })
     }
     const clearInputs = () => {
         setCredentialsHolder({
@@ -38,37 +60,7 @@ export default function Register(){
         if(isSignedIn){
             return navigate('/')     
         }
-        if(isRequestSubmited){
-            fetch(
-                `https://localhost:7104/api/Users`,{
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(credentialsHolder)
-            }).then(response => {
-                if(response.status === 200 || response.status === 201){
-                    clearInputs()
-                    response.json().then(user => {
-                        console.log(user);                     
-                    })
-                }
-                if(response.status !== 200){
-                    response.text().then(data => {
-                        throw new Error(data);
-                    }).catch(e => {
-                        setLocalRequestResultHolder(`${e}`)
-                    });
-                }
-            }).catch((e) => {
-                setRequestResultHolder(e.message)
-                navigate('/Error')
-            })
-        }
-        return () => {
-            setIsRequestSubmited(false)
-        }
-    }, [isRequestSubmited])
+    })
 
     return(
         <div className={'row'}>
@@ -110,7 +102,7 @@ export default function Register(){
                     <div className={'form-group'}>
                         <label className={'form-label'}>Confirm password</label>
                         <input className={'form-control'} value={credentialsHolder.confirmpassword} type='password' 
-                        autocomplete="confirm-password" onChange={e => {
+                        autoComplete="confirm-password" onChange={e => {
                             setLocalRequestResultHolder('')
                             return setCredentialsHolder((prevState) => ({
                             ...prevState,

@@ -1,6 +1,7 @@
 import React, {useEffect, useContext, useState} from 'react'
 import Context from '../../Context/context'
 import Order from './order'
+import CategoriesWidget from '../Widgets/categoriesWidget'
 import SearchWidget from '../Widgets/searchWidget'
 import OrderFormVisibilityContext from '../../Context/orderFormVisibilityContext'
 import CommentPublicationContext from '../../Context/commentPublicationContext'
@@ -10,12 +11,15 @@ import { useNavigate } from 'react-router-dom'
 
 export default function Product(){ 
     const navigate = useNavigate()
-    const {SelectedProduct, RequestResultHolder} = useContext(Context)
+    const {SelectedProduct, RequestResultHolder, SearchSubmited} = useContext(Context)
+
     const [selectedProduct, setSelectedProduct] = SelectedProduct
-    const {SearchSubmited} = useContext(Context)
     const [isSearchSubmited, setIsSearchSubmited] = SearchSubmited
+
     const [isOrderFormOpened, setIsOrderFormOpened] = useState(false)
     const [isCommentPublished, setIsCommentPublished] = useState(false)
+
+    const [Categories, setCategories] = useState([])
 
     //errorHandling
     const [requestResultHolder, setRequestResultHolder] = RequestResultHolder
@@ -71,6 +75,27 @@ export default function Product(){
             }
         }
     }, [isCommentPublished])
+    useEffect(() => {
+        fetch(`https://localhost:7104/api/Categories`,{
+          method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+        }).then(response => {
+          if(response.status === 200){
+            response.json().then(json => {          
+              setCategories(json)
+            })
+            .catch(e => {
+              setRequestResultHolder(e.message)
+              navigate('/Error')
+            })
+          }
+        }).catch(e => {
+          setRequestResultHolder(e.message)
+          navigate('/Error')
+        })
+    }, [])
     return(
         <> 
         <OrderFormVisibilityContext.Provider value={{IsOrderFormOpened: [isOrderFormOpened, setIsOrderFormOpened]}}>
@@ -107,6 +132,7 @@ export default function Product(){
                                     <button style={{fontSize: "1.5rem"}} className={'btn btn-outline-secondary fw-bolder'} onClick={() => setIsOrderFormOpened(true)}>Make an order</button>     
                                 </div>
                                 <SearchWidget/>
+                                <CategoriesWidget categories={Categories}/>
                             </div>                 
                             <div className={'col-lg-5'}>
                                 {isOrderFormOpened && <Order product={selectedProduct}/>}

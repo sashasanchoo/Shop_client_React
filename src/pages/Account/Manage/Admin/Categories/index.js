@@ -2,7 +2,9 @@ import React, { useEffect, useState, useContext } from 'react'
 import Context from '../../../../../Context/context'
 import { NavLink, useNavigate } from 'react-router-dom'
 import UnauthorizedUserErrorMessage from '../../../../../Components/unauthorizedUserMessage'
+import Loader from '../../../../../Components/helpers/loader'
 export default function AdminPanelCategoriesIndexPage(){
+    const [loading, setLoading] = useState(true)
     const [categories, setCategories] = useState([])
     const navigate = useNavigate()
 
@@ -22,6 +24,7 @@ export default function AdminPanelCategoriesIndexPage(){
                 if(response.status === 200){
                     response.json().then(data => {
                         setCategories(data)
+                        setLoading(false)
                     }).catch(e => {
                         setRequestResultHolder(e.message) 
                         navigate('/Error')
@@ -35,10 +38,12 @@ export default function AdminPanelCategoriesIndexPage(){
     }, [])
     return(
         <>
-            {isInAdminRole ? 
+            {loading ? (<Loader/>):
             (
-                <>
-                    <table className={'table table-bordered'}>
+                isInAdminRole ? 
+            (
+                <div className={'table-responsive'}>
+                    <table className={'table table-bordered text-nowrap'}>
                         <thead>
                             <tr>
                                 <th>
@@ -65,7 +70,7 @@ export default function AdminPanelCategoriesIndexPage(){
                             })}
                         </tbody>
                     </table>
-                    <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between'}}>
+                    <div className={'form-group'}>
                         <NavLink className={'btn btn-success'} to='/Account/Manage/Admin/Categories/Create'>
                             Create
                         </NavLink>
@@ -73,12 +78,14 @@ export default function AdminPanelCategoriesIndexPage(){
                             Back to list
                         </NavLink>
                     </div>
-                </>
+                </div>
             )
             :
             (
                 <UnauthorizedUserErrorMessage/>
+            )
             )}
+            
         
         </>
     )
